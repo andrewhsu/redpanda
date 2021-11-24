@@ -6,7 +6,6 @@ sure to also checkout our [code of conduct](CODE_OF_CONDUCT.md). We work hard to
 make this a welcoming community for all, and we're excited that you are here!
 
 The basics:
-
 * Use the [Issue Tracker](https://github.com/vectorizedio/redpanda/issues/) to
   report bugs, crashes, performance issues, etc... Please include as much detail
   as possible.
