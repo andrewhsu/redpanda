@@ -228,7 +228,6 @@ results
 .ducktape
 tests/docker/build
 vbuild/
-
 /.vtools.yml
 /vtools
 /Taskfile.yml
