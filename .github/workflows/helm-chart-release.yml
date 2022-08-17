@@ -21,10 +21,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Check Helm version
+    - name: Configure git
+      uses: docker://quay.io/helmpack/chart-releaser:v1.4.0
       run: |
-        helm version
-        echo owner ${{ github.repository_owner }}
+        git config user.name "$GITHUB_ACTOR"
+        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
     - name: Package helm chart
       working-directory: src/go/k8s/helm-chart/charts
@@ -36,7 +37,7 @@ jobs:
         file: src/go/k8s/helm-chart/charts/redpanda-operator-${{ github.event.release.tag_name }}.tgz
         asset_name: redpanda-operator-${{ github.event.release.tag_name }}.tgz
 
-    - name: Update index
+    - name: Update helm chart repo index
       if: contains(github.event.release.tag_name, '-beta') == false
       uses: docker://quay.io/helmpack/chart-releaser:v1.4.0
       env:
