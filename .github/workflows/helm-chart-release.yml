@@ -22,7 +22,6 @@ jobs:
         fetch-depth: 0
 
     - name: Configure git
-      uses: actions/checkout@v3
       run: |
         git config user.name "$GITHUB_ACTOR"
         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
