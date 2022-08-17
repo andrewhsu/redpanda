@@ -28,7 +28,11 @@ jobs:
 
     - name: Package helm chart
       working-directory: src/go/k8s/helm-chart/charts
-      run: helm package -u --version ${{ github.event.release.tag_name }} --app-version ${{ github.event.release.tag_name }} redpanda-operator
+      run: |
+        helm package redpanda-operator \
+          --dependency-update \
+          --version ${{ github.event.release.tag_name }} \
+          --app-version ${{ github.event.release.tag_name }}
 
     - name: Upload helm package to release
       uses: svenstaro/upload-release-action@2.3.0
@@ -37,7 +41,7 @@ jobs:
         asset_name: redpanda-operator-${{ github.event.release.tag_name }}.tgz
 
     - name: Update helm chart repo index
-      if: contains(github.event.release.tag_name, '-beta') == false
+      if: contains(github.event.release.tag_name, '-') == false
       uses: docker://quay.io/helmpack/chart-releaser:v1.4.0
       env:
         CR_OWNER: ${{ github.repository_owner }}
