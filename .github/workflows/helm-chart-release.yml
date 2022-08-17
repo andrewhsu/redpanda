@@ -21,15 +21,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Configure Git
-      run: |
-        echo print git config
-        git config user.name
-        git config user.email
-        echo set git config
-        git config user.name "$GITHUB_ACTOR"
-        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
     - name: Check Helm version
       run: |
         helm version
