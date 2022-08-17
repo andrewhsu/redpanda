@@ -46,7 +46,7 @@ jobs:
         CR_PACKAGE_PATH: src/go/k8s/helm-chart/charts
         CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CR_PUSH: 1
-        CR_RELEASE_NAME_TEMPLATE: {{ .Version }}
+        CR_RELEASE_NAME_TEMPLATE: "{{ .Version }}"
       with:
         entrypoint: /usr/local/bin/cr
         args: index
