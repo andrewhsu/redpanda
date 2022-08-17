@@ -38,7 +38,7 @@ jobs:
 
     - name: Update index
       if: contains(github.event.release.tag_name, '-beta') == false
-      uses: helm/chart-releaser-action@v1.4.0
+      uses: quay.io/helmpack/chart-releaser:v1.4.0
       env:
         CR_OWNER: ${{ github.repository_owner }}
         CR_GIT_REPO: redpanda
@@ -48,5 +48,4 @@ jobs:
         CR_PUSH: 1
         CR_RELEASE_NAME_TEMPLATE: "{{ .Version }}"
       with:
-        entrypoint: /usr/local/bin/cr
         args: index
