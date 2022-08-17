@@ -22,7 +22,7 @@ jobs:
         fetch-depth: 0
 
     - name: Configure git
-      uses: docker://quay.io/helmpack/chart-releaser:v1.4.0
+      uses: actions/checkout@v3
       run: |
         git config user.name "$GITHUB_ACTOR"
         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
