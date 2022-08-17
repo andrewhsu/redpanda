@@ -38,7 +38,7 @@ jobs:
 
     - name: Update index
       if: contains(github.event.release.tag_name, '-beta') == false
-      uses: quay.io/helmpack/chart-releaser:v1.4.0
+      uses: docker://quay.io/helmpack/chart-releaser:v1.4.0
       env:
         CR_OWNER: ${{ github.repository_owner }}
         CR_GIT_REPO: redpanda
