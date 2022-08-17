@@ -44,8 +44,9 @@ jobs:
         CR_GIT_REPO: redpanda
         CR_INDEX_PATH: index.yaml
         CR_PACKAGE_PATH: src/go/k8s/helm-chart/charts
-        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CR_PUSH: 1
-        CR_RELEASE_NAME_TEMPLATE: "{{ .Version }}"
+        CR_RELEASE_NAME_TEMPLATE: {{ .Version }}
       with:
-        args: --help
+        entrypoint: /usr/local/bin/cr
+        args: index
