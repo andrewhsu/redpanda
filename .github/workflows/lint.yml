@@ -8,16 +8,7 @@
 # by the Apache License, Version 2.0
 
 name: Lint all codez
-on:
-  push:
-    tags: 'v2**'
-    branches:
-      - dev
-      - release
-  pull_request:
-    branches:
-      - main
-      - dev
+on: push
 
 jobs:
   go:
