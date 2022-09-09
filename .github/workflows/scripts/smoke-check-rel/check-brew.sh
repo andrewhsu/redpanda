@@ -6,4 +6,4 @@ if [[ -z "$1" ]]; then
 fi
 brew install redpanda-data/tap/redpanda
 BREW_REDPANDA_VERSION=$(brew list --versions --formula redpanda)
-[[ $HELM_SEARCH_APP_VERSION =~ "redpanda $1" ]]
+[[ $BREW_REDPANDA_VERSION =~ "redpanda $1" ]]
