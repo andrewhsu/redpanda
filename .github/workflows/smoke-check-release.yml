@@ -58,4 +58,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
       - name: Smoke check assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: $SCRIPT_DIR/check-assets.sh $REDPANDA_VER
