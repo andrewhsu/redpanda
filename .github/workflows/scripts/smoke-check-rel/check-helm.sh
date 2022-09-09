@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x -e -o pipefail
-if [[ -z "$1" ]]; then
-	echo error: required argument redpanda version, e.g. 22.2.1
-	exit 1
+if [[ -z $1 ]]; then
+  echo error: required argument redpanda version, e.g. 22.2.1
+  exit 1
 fi
 helm repo add redpanda https://charts.vectorized.io/
 helm repo update
