@@ -5,4 +5,4 @@ if [[ -z $1 ]]; then
   exit 1
 fi
 RELEASE_ASSETS=$(gh release view --json 'assets' --jq '.assets | length' "v$1")
-(($RELEASE_ASSETS == 5))
+((RELEASE_ASSETS == 5))
