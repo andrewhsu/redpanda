@@ -225,3 +225,221 @@ largely not depend on or refer to other commits in a series (e.g. "in the
 previous commit..." or "and in a later commit this will be implemented"), nor
 should it refer to out-of-band conversations (e.g. "in last week's meeting").
 Refer to high-level context in the pull request description.
+
+## Pull request description
+
+Creating a new pull request (PR) will start with section headers in the description. Fill out the sections with information to help guide the PR reviewers in understanding the code changes. The description will also be parsed by scripts to generation release notes, so be sure to adhere to the structure as documented.
+
+### Contents of `Cover Letter` section
+
+Describe, in plain language, the motivation behind the change (bug fix, feature, improvement) in this PR and how the included commits address it, e.g.
+
+```
+## Cover Letter
+
+Some users complain the `abort` button is hard to find. Talked with design
+team and they suggested increasing the size of the button as oppposed
+to changing the color or moving its position. So, increased width of
+button to match width of other buttons on the page.
+```
+
+If any of the git commits in the PR address a bug, link the issue that the PR will address using the `Fixes` [keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword), e.g.
+
+```
+## Cover Letter
+
+Fixes #123
+```
+
+If the PR is a backport, link to the backport with `Backport of PR` as well as the issue, e.g.
+
+```
+## Cover Letter
+
+Backport of PR #789
+Fixes #567
+```
+
+### Contents of `Backports Required` section
+
+For PRs created towards the `dev` branch, indicate if the PR needs a backport, after merge, to any of the supported branches by using a check-box list, e.g.
+
+```
+## Backports Required
+
+- [ ] v22.2.x
+- [ ] v22.1.x
+- [ ] v21.11.x
+```
+
+The checkbox will be used after the PR has merged to keep track of the status of merged backport PRs. When a backport PR is merged, check the checkbox to indicate its completion.
+
+If no backport is needed, explicitly indicate this by adding a bullet point with `none`, e.g.
+
+```
+## Backports Required
+
+* none
+```
+
+### Contents of `UX Changes` section
+
+Describe, in plain language, how this PR affects an end-user. Explain topic flags, configuration flags, command line flags, deprecation policies, etc. that are added or modified. Don't ship user breaking changes. Ask the @redpanda-data/product team if you need help with user visible changes.
+
+Example:
+
+```
+## UX Changes
+
+* Additional configuration section for coffee strength in `config.json` with `strength` key.
+* Getting started documentation needs update in separate PR
+```
+
+### Contents of `Release Notes` section
+
+The contents of this section is used to generate the release notes published on the [releases](https://github.com/redpanda-data/redpanda/releases) page.
+
+If the PR is created towards `dev` branch, this section MUST be filled out.
+
+#### Adding a `Bug fixes` sub-section
+
+If the PR is a bug fix targeting `dev` branch, add a **Bug Fixes** sub-section with a bullet point explaining the bug that is fixed, e.g.
+
+```
+## Release Notes
+
+### Bug Fixes
+
+* Fix crash if log line is over 255 characters.
+```
+
+Do not include a link to the issue that is fixed in the bullet point. This will be automatically derived for the release notes based on the `Fixes` keyword in the `Cover Letter` section.
+
+If the PR is a bug fix targeting a release branch, e.g. `v22.2.x`, as a backport PR, then this section is optional because the release notes of the original PR towards `dev` branch will be used. Adding a release notes section in a backport PR will override the original PR's release notes section.
+
+If the PR is a bug fix targeting a release branch as a unique fix, i.e. not a backport PR, then add a **Bug Fixes** sub-section with a bullet point explaining the bug that is fixed.
+
+#### Adding a `Features` sub-section
+
+If the PR introduces new functionality, include it under a **Features** sub-section. Be sure to explain how to configure the feature if applicable, e.g.
+
+```
+## Release Notes
+
+### Features
+
+* Add option to configure strength of coffee. Set in `config.json` file with `strength` key. Valid values: `light`, `medium` (default), `strong`.
+```
+
+#### Adding an `Improvements` sub-section
+
+Improvements make existing functionality perform more efficient without user intervention or change in functional behavior, e.g.
+
+* speed of operation
+* memory utilization
+* disk utilization
+
+If the PR includes improvements, add a bullet point under an **Improvements** sub-section, e.g.:
+
+```
+## Release Notes
+
+### Improvements
+
+* Eliminate 10 ms of delay in outputting debug log messages.
+* Use 50% less memory for each debug log message.
+```
+
+#### Omitting release notes
+
+A release notes entry is not needed if the PR only contains modifications that do not change the functionality of the product, e.g.
+
+* bug fixes in tests that do not require a corresponding change to the core codebase
+* typo fixes in documentation
+* code formatting changes
+
+Indicate this by adding a bullet point with `none`, e.g.
+
+```
+## Release Notes
+
+* none
+```
+
+### Example PR Descriptions
+
+A collection of ficticious PR descriptions that have a valid, expected format.
+
+#### Example Feature PR Description
+
+An example of a PR to `dev` branch that adds a new feature for the next release and references the tracking issue that will be closed when the PR is merged:
+
+```
+## Cover Letter
+
+Closes #456
+
+Some users complain the `abort` button is hard to find. Talked with design
+team and they suggested increasing the size of the button as oppposed
+to changing the color or moving its position. So, increased width of
+button to match width of other buttons on the page.
+
+## Backports Required
+
+* none
+
+## UX Changes
+
+* Additional configuration section for coffee strength in `config.json` with `strength` key.
+* Getting started documentation needs update in separate PR
+
+## Release Notes
+
+### Features
+
+* Add option to configure strength of coffee. Set in `config.json` file with `strength` key. Valid values: `light`, `medium` (default), `strong`.
+```
+
+#### Example Bug Fix PR Description
+
+An example of a PR to `dev` branch where a bug fix also happens to add an improvement:
+
+```
+## Cover Letter
+
+Fixes #123
+
+## Backports Required
+
+- [ ] v22.2.x
+- [ ] v22.1.x
+
+## UX Changes
+
+## Release Notes
+
+### Bug Fixes
+
+* Fix crash if log line is over 255 characters.
+
+### Improvements
+
+* Eliminate 10 ms of delay in outputting debug log messages.
+```
+
+#### Example Backport PR Description
+
+An example of a PR to a release branch of a simple backport:
+
+```
+## Cover Letter
+
+Backport of PR #234
+Fixes #123
+
+## Backports Required
+
+## UX Changes
+
+## Release Notes
+```
