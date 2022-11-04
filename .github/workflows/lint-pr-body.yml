@@ -1,0 +1,25 @@
+# Copyright 2022 Redpanda Data, Inc.
+#
+# Use of this software is governed by the Business Source License
+# included in the file licenses/BSL.md
+#
+# As of the Change Date specified in that file, in accordance with
+# the Business Source License, use of this software will be governed
+# by the Apache License, Version 2.0
+
+name: Lint PR body
+on:
+  pull_request:
+    types: [created, edited]
+jobs:
+  lint:
+    name: Lint PR body
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Lint PR body
+      env:
+        PR_NUMBER: ${{ github.event.number }}
+      run: |
+        gh pr view "$PR_NUMBER" --json body --jq '.body'
