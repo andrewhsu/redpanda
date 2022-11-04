@@ -1,0 +1,37 @@
+# Copyright 2022 Redpanda Data, Inc.
+#
+# Use of this software is governed by the Business Source License
+# included in the file licenses/BSL.md
+#
+# As of the Change Date specified in that file, in accordance with
+# the Business Source License, use of this software will be governed
+# by the Apache License, Version 2.0
+
+name: lint pr body
+on:
+  pull_request:
+    types: [opened, edited]
+jobs:
+  lint-pr-body:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: redpanda-data/sparse-checkout
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          path: sparse-checkout
+      - uses: ./sparse-checkout
+        with:
+          repository: redpanda-data/vtools
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          directories: scripts/rpchangelog
+          path: ghca
+      - name: Run linter
+        run: ./ghca/scripts/rpchangelog.py -h
+      - name: Create summary
+        run: |
+          echo "## Bug Fixes" >> $GITHUB_STEP_SUMMARY
+          echo "* Fixes bug in submit button" >> $GITHUB_STEP_SUMMARY
+          echo "## Improvements" >> $GITHUB_STEP_SUMMARY
+          echo "* Speed up error recovery" >> $GITHUB_STEP_SUMMARY
