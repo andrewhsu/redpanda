@@ -1,5 +1,4 @@
 # Awesome Redpanda 🤯 😎 🤯
-
 Please send a pull request with your project name and description. 
 
 ## Partner blogs

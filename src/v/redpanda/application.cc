@@ -36,6 +36,7 @@
 #include "cluster/partition_manager.h"
 #include "cluster/rm_partition_frontend.h"
 #include "cluster/security_frontend.h"
+#include "cluster/self_test_rpc_handler.h"
 #include "cluster/service.h"
 #include "cluster/topics_frontend.h"
 #include "cluster/tx_gateway.h"
@@ -56,10 +57,10 @@
 #include "kafka/server/fetch_session_cache.h"
 #include "kafka/server/group_manager.h"
 #include "kafka/server/group_router.h"
-#include "kafka/server/protocol.h"
 #include "kafka/server/queue_depth_monitor.h"
 #include "kafka/server/quota_manager.h"
 #include "kafka/server/rm_group_frontend.h"
+#include "kafka/server/server.h"
 #include "model/fundamental.h"
 #include "model/metadata.h"
 #include "net/server.h"
@@ -70,7 +71,6 @@
 #include "raft/service.h"
 #include "redpanda/admin_server.h"
 #include "resource_mgmt/io_priority.h"
-#include "rpc/simple_protocol.h"
 #include "storage/backlog_controller.h"
 #include "storage/chunk_cache.h"
 #include "storage/compaction_controller.h"
@@ -641,7 +641,8 @@ void application::configure_admin_server() {
       std::ref(metadata_cache),
       std::ref(archival_scheduler),
       std::ref(_connection_cache),
-      std::ref(node_status_table))
+      std::ref(node_status_table),
+      std::ref(self_test_frontend))
       .get();
 }
 
@@ -920,6 +921,16 @@ void application::wire_up_redpanda_services(model::node_id node_id) {
       std::ref(feature_table),
       std::ref(cloud_storage_api));
     controller->wire_up().get0();
+
+    construct_single_service_sharded(self_test_backend).get();
+
+    construct_single_service_sharded(
+      self_test_frontend,
+      node_id,
+      std::ref(controller->get_members_table()),
+      std::ref(self_test_backend),
+      std::ref(_connection_cache))
+      .get();
 
     construct_service(node_status_table, node_id).get();
 
@@ -1209,9 +1220,46 @@ void application::wire_up_redpanda_services(model::node_id node_id) {
           });
       })
       .get();
+    std::optional<kafka::qdc_monitor::config> qdc_config;
+    if (config::shard_local_cfg().kafka_qdc_enable()) {
+        qdc_config = kafka::qdc_monitor::config{
+          .latency_alpha = config::shard_local_cfg().kafka_qdc_latency_alpha(),
+          .max_latency = config::shard_local_cfg().kafka_qdc_max_latency_ms(),
+          .window_count = config::shard_local_cfg().kafka_qdc_window_count(),
+          .window_size = config::shard_local_cfg().kafka_qdc_window_size_ms(),
+          .depth_alpha = config::shard_local_cfg().kafka_qdc_depth_alpha(),
+          .idle_depth = config::shard_local_cfg().kafka_qdc_idle_depth(),
+          .min_depth = config::shard_local_cfg().kafka_qdc_min_depth(),
+          .max_depth = config::shard_local_cfg().kafka_qdc_max_depth(),
+          .depth_update_freq
+          = config::shard_local_cfg().kafka_qdc_depth_update_ms(),
+        };
+    }
     syschecks::systemd_message("Starting kafka RPC {}", kafka_cfg.local())
       .get();
-    _kafka_server.start(&kafka_cfg).get();
+    _kafka_server
+      .start(
+        &kafka_cfg,
+        smp_service_groups.kafka_smp_sg(),
+        std::ref(metadata_cache),
+        std::ref(controller->get_topics_frontend()),
+        std::ref(controller->get_config_frontend()),
+        std::ref(controller->get_feature_table()),
+        std::ref(quota_mgr),
+        std::ref(group_router),
+        std::ref(shard_table),
+        std::ref(partition_manager),
+        std::ref(fetch_session_cache),
+        std::ref(id_allocator_frontend),
+        std::ref(controller->get_credential_store()),
+        std::ref(controller->get_authorizer()),
+        std::ref(controller->get_security_frontend()),
+        std::ref(controller->get_api()),
+        std::ref(tx_gateway_frontend),
+        std::ref(cp_partition_manager),
+        std::ref(data_policies),
+        qdc_config)
+      .get();
     kafka_cfg.stop().get();
     construct_service(
       fetch_session_cache,
@@ -1648,6 +1696,12 @@ void application::start_runtime_services(
               std::ref(node_status_backend)));
 
           runtime_services.push_back(
+            std::make_unique<cluster::self_test_rpc_handler>(
+              _scheduling_groups.node_status(),
+              smp_service_groups.cluster_smp_sg(),
+              std::ref(self_test_backend)));
+
+          runtime_services.push_back(
             std::make_unique<cluster::partition_balancer_rpc_handler>(
               _scheduling_groups.cluster_sg(),
               smp_service_groups.cluster_smp_sg(),
@@ -1707,46 +1761,6 @@ void application::start_kafka(
     // this phase we will wait for the node to be a cluster member before
     // proceeding, because it is not helpful to clients for us to serve
     // kafka requests before we have up to date knowledge of the system.
-    std::optional<kafka::qdc_monitor::config> qdc_config;
-    if (config::shard_local_cfg().kafka_qdc_enable()) {
-        qdc_config = kafka::qdc_monitor::config{
-          .latency_alpha = config::shard_local_cfg().kafka_qdc_latency_alpha(),
-          .max_latency = config::shard_local_cfg().kafka_qdc_max_latency_ms(),
-          .window_count = config::shard_local_cfg().kafka_qdc_window_count(),
-          .window_size = config::shard_local_cfg().kafka_qdc_window_size_ms(),
-          .depth_alpha = config::shard_local_cfg().kafka_qdc_depth_alpha(),
-          .idle_depth = config::shard_local_cfg().kafka_qdc_idle_depth(),
-          .min_depth = config::shard_local_cfg().kafka_qdc_min_depth(),
-          .max_depth = config::shard_local_cfg().kafka_qdc_max_depth(),
-          .depth_update_freq
-          = config::shard_local_cfg().kafka_qdc_depth_update_ms(),
-        };
-    }
-    _kafka_server
-      .invoke_on_all([this, qdc_config](net::server& s) {
-          auto proto = std::make_unique<kafka::protocol>(
-            smp_service_groups.kafka_smp_sg(),
-            metadata_cache,
-            controller->get_topics_frontend(),
-            controller->get_config_frontend(),
-            controller->get_feature_table(),
-            quota_mgr,
-            group_router,
-            shard_table,
-            partition_manager,
-            fetch_session_cache,
-            id_allocator_frontend,
-            controller->get_credential_store(),
-            controller->get_authorizer(),
-            controller->get_security_frontend(),
-            controller->get_api(),
-            tx_gateway_frontend,
-            cp_partition_manager,
-            data_policies,
-            qdc_config);
-          s.set_protocol(std::move(proto));
-      })
-      .get();
     vlog(_log.info, "Waiting for cluster membership");
     controller->get_members_table()
       .local()
