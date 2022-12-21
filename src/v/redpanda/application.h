@@ -18,12 +18,15 @@
 #include "cluster/node/local_monitor.h"
 #include "cluster/node_status_backend.h"
 #include "cluster/node_status_table.h"
+#include "cluster/self_test_backend.h"
+#include "cluster/self_test_frontend.h"
 #include "config/node_config.h"
 #include "coproc/fwd.h"
 #include "features/fwd.h"
 #include "kafka/client/configuration.h"
 #include "kafka/client/fwd.h"
 #include "kafka/server/fwd.h"
+#include "kafka/server/server.h"
 #include "net/conn_quota.h"
 #include "net/fwd.h"
 #include "pandaproxy/fwd.h"
@@ -100,6 +103,8 @@ public:
     ss::sharded<cluster::node_status_table> node_status_table;
     ss::sharded<cluster::partition_manager> partition_manager;
     ss::sharded<cluster::rm_partition_frontend> rm_partition_frontend;
+    ss::sharded<cluster::self_test_backend> self_test_backend;
+    ss::sharded<cluster::self_test_frontend> self_test_frontend;
     ss::sharded<cluster::shard_table> shard_table;
     ss::sharded<cluster::tm_stm_cache> tm_stm_cache;
     ss::sharded<cluster::tx_gateway_frontend> tx_gateway_frontend;
@@ -214,7 +219,7 @@ private:
     ss::sharded<rpc::rpc_server> _rpc;
     ss::sharded<admin_server> _admin;
     ss::sharded<net::conn_quota> _kafka_conn_quotas;
-    ss::sharded<net::server> _kafka_server;
+    ss::sharded<kafka::server> _kafka_server;
     std::unique_ptr<pandaproxy::rest::api> _proxy;
     std::unique_ptr<pandaproxy::schema_registry::api> _schema_registry;
     ss::sharded<storage::compaction_controller> _compaction_controller;
