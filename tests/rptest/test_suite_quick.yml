@@ -9,7 +9,15 @@
 
 quick:
   included:
-  - tests/
+  - tests/adjacent_segment_merging_test.py
+  - tests/archival_test.py
+  - tests/e2e_shadow_indexing_test.py
+  - tests/e2e_topic_recovery_test.py
+  - tests/multi_restarts_with_archival_test.py
+  - tests/read_replica_e2e_test.py
+  - tests/shadow_indexing_admin_api_test.py
+  - tests/topic_delete_test.py
+  - tests/topic_recovery_test.py
 
   excluded:
   - tests/wasm_topics_test.py
