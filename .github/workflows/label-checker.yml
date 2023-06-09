@@ -1,0 +1,14 @@
+name: Label checker
+on:
+  pull_request:
+    types: [ labeled ]
+jobs:
+  check-kind-label:
+    runs-on: ubuntu-latest
+    steps:
+    - run: check-for-kind-label.py
+  check-bug-label:
+    if: ${{ contains( github.event.pull_request.labels.*.name, 'kind/bug') }}
+    runs-on: ubuntu-latest
+    steps:
+    - run: check-body-for-fixes-keyword.py
