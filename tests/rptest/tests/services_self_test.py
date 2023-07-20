@@ -252,7 +252,6 @@ class SimpleSelfTest(Test):
     def test_cloud(self):
         """
         Execute a few of the methods that will connect to the k8s pod.
-        """
 
         node_memory = float(self.redpanda.get_node_memory_mb())
         assert node_memory > 1.0
@@ -262,6 +261,7 @@ class SimpleSelfTest(Test):
 
         node_disk_free = self.redpanda.get_node_disk_free()
         assert node_disk_free > 0
+        """
 
         if RedpandaServiceCloud.GLOBAL_CLOUD_API_URL in self.redpanda.context.globals:
             # just run rpk against redpanda cloud for now since it has tls enabled by default
@@ -274,6 +274,11 @@ class SimpleSelfTest(Test):
             topic_name = 'rp_ducktape_test_cloud_topic'
             self.logger.info(f'creating topic {topic_name}')
             rpk.create_topic(topic_name)
+            self.logger.info('running kgo-verifier producer')
+            producer = KgoVerifierProducer(self.test_context, self.redpanda, topic_name, 32, 3)
+            producer.start()
+            producer.wait_for_acks(3, timeout_sec=10, backoff_sec=1)
+            producer.stop()
             self.logger.info(f'deleting topic {topic_name}')
             rpk.delete_topic(topic_name)
 
