@@ -786,7 +786,8 @@ class CloudCluster():
             if self.config.install_pack_ver == 'latest':
                 self.config.install_pack_ver = \
                     self._get_latest_install_pack_ver()
-            self.current.install_pack_ver = self.config.install_pack_ver
+            else:
+                self.current.install_pack_ver = self.config.install_pack_ver
             # Multi-zone not supported, so get a single one from the list
             self.current.region = self.config.region
             self.current.region_id = self._get_region_id()
