@@ -922,20 +922,21 @@ class HighThroughputTest(PreallocNodesMixin, RedpandaCloudTest):
     def stage_decommission_and_add(self):
         def cluster_ready_replicas(cluster_name):
             # kubectl get cluster rp-clkd0n22nfn1jf7vd9t0 -n=redpanda -o=jsonpath='{.status.readyReplicas}'
-            return int(
-                self.redpanda.kubectl.cmd([
-                    'get', 'cluster', cluster_name, '-n=redpanda',
-                    "-o=jsonpath='{.status.readyReplicas}'"
-                ]).decode())
+            ret = self.redpanda.kubectl.cmd([
+                'get', 'cluster', cluster_name, '-n=redpanda',
+                "-o=jsonpath='{.status.readyReplicas}'"
+            ]).decode()
+            # seems like readyReplicas will be empty if 0 are ready
+            return int(0 if not ret else ret)
 
         def deployment_ready_replicas():
             # kubectl get deployment redpanda-controller-manager -n=redpanda-system -o=jsonpath='{.status.readyReplicas}'
-            return int(
-                self.redpanda.kubectl.cmd([
-                    'get', 'deployment', 'redpanda-controller-manager',
-                    '-n=redpanda-system',
-                    "-o=jsonpath='{.status.readyReplicas}'"
-                ]).decode())
+            return self.redpanda.kubectl.cmd([
+                'get', 'deployment', 'redpanda-controller-manager',
+                '-n=redpanda-system', "-o=jsonpath='{.status.readyReplicas}'"
+            ]).decode()
+            # seems like readyReplicas will be empty if 0 are ready
+            return int(0 if not ret else ret)
 
         agent_services = [
             'redpanda-agent.service', 'redpanda-agent-boot.service'
@@ -1117,11 +1118,12 @@ class HighThroughputTest(PreallocNodesMixin, RedpandaCloudTest):
 
     def _get_cluster_ready_replicas(self, cluster_name):
         # kubectl get cluster rp-clkd0n22nfn1jf7vd9t0 -n=redpanda -o=jsonpath='{.status.readyReplicas}'
-        return int(
-            self.redpanda.kubectl.cmd([
-                'get', 'cluster', cluster_name, '-n=redpanda',
-                "-o=jsonpath='{.status.readyReplicas}'"
-            ]).decode())
+        ret = self.redpanda.kubectl.cmd([
+            'get', 'cluster', cluster_name, '-n=redpanda',
+            "-o=jsonpath='{.status.readyReplicas}'"
+        ]).decode()
+        # seems like readyReplicas will be empty if 0 are ready
+        return int(0 if not ret else ret)
 
     def _wait_cluster_ready_replicas(self, cluster_name, ready_replicas):
         # kubectl wait cluster rp-clkd0n22nfn1jf7vd9t0 -n=redpanda --for=jsonpath='{.status.readyReplicas}'=4 --timeout=600s
