@@ -1134,14 +1134,6 @@ class HighThroughputTest(PreallocNodesMixin, RedpandaCloudTest):
         ]).decode()
 
     def _patch_cluster_replicas(self, cluster_name, replicas):
-        def cluster_ready_replicas(cluster_name):
-            # kubectl get cluster rp-clkd0n22nfn1jf7vd9t0 -n=redpanda -o=jsonpath='{.status.readyReplicas}'
-            return int(
-                self.redpanda.kubectl.cmd([
-                    'get', 'cluster', cluster_name, '-n=redpanda',
-                    "-o=jsonpath='{.status.readyReplicas}'"
-                ]).decode())
-
         patch = [{
             'op': 'replace',
             'path': '/spec/replicas',
@@ -1157,13 +1149,7 @@ class HighThroughputTest(PreallocNodesMixin, RedpandaCloudTest):
         self.logger.debug(
             f'waiting for cluster {cluster_name} to arrive at replicas {replicas}'
         )
-        wait_until(
-            lambda: cluster_ready_replicas(cluster_name) == replicas,
-            timeout_sec=600,
-            backoff_sec=1,
-            err_msg=
-            f'number of ready replicas for {cluster_name} did not arrive at {replicas}'
-        )
+        self._wait_cluster_ready_replicas(cluster_name, replicas)
 
     def _delete_cluster_pvc(self, cluster_name, num):
         pvc_name = f'datadir-{cluster_name}-{num}'
