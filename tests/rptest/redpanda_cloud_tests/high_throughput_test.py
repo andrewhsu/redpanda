@@ -1213,7 +1213,8 @@ class HighThroughputTest(PreallocNodesMixin, RedpandaCloudTest):
         self.logger.info(
             f'scaling out cluster {cluster_name} from {orig_replicas} to {new_replicas}'
         )
-        self.redpanda.scale_cluster(new_replicas)
+        resp = self.redpanda.scale_cluster(new_replicas)
+        self.logger.debug(resp)
 
         self.logger.info(
             f'waiting for cluster {cluster_name} to have ready replicas {new_replicas}'
