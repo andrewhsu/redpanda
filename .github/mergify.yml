@@ -1,18 +1,21 @@
+
 pull_request_rules:
   - name: enqueue on label
-    conditions:
-      - base=dev
-      - label=merge-queue
+    conditions: []
     actions:
       queue:
-        name: dev
-        merge_bot_account: vbotbuildovich
-        update_bot_account: vbotbuildovich
 queue_rules:
   - name: dev
-    speculative_checks: 2
-    batch_size: 4
-    draft_bot_account: vbotbuildovich
-    conditions:
+    queue_conditions:
       - base=dev
       - label=merge-queue
+    merge_conditions:
+      - base=dev
+      - label=merge-queue
+    batch_size: 4
+    draft_bot_account: vbotbuildovich
+    merge_bot_account: vbotbuildovich
+    update_bot_account: vbotbuildovich
+
+merge_queue:
+  max_parallel_checks: 2
